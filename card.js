@@ -1,5 +1,5 @@
 const { render } = ReactDOM;
-const { useState } = React;
+const { useState, useRef } = React;
 
 const data = {
   title: "Dinosaurs",
@@ -21,14 +21,15 @@ const data = {
   ]
 };
 
+// compose pattern
+const compose = (...fns) => arg =>
+  fns.reduce((composed, f) => f(composed), arg);
+
 const capitalize = function(value) {
   if (!value) return "";
   value = value.toString();
   return value.charAt(0).toUpperCase() + value.slice(1);
 };
-
-const compose = (...fns) => arg =>
-  fns.reduce((composed, f) => f(composed), arg);
 
 const undercase = function(value) {
   if (!value) return "";
@@ -45,16 +46,43 @@ const url = function(value) {
 const undercaseUrl = compose(undercase, url);
 
 const Card = ({ data: { title, content, dinos } }) => {
+  const [newItem, setNewItem] = useState("");
   const [items, setItems] = useState(dinos);
+  const inputEl = useRef(null);
 
-  const onAddDianosaur = e => {
-    e.preventDefault();
-    setItems([
-      ...items,
-      {
-        text: e.target.value
-      }
-    ]);
+  const onChange = e => {
+    setNewItem(e.target.value);
+  };
+
+  const onEnter = e => {
+    if (e.key.toLowerCase() !== "enter") {
+      console.log("not enter key");
+      return;
+    }
+
+    if (e.target.value) {
+      setItems([
+        ...items,
+        {
+          text: e.target.value
+        }
+      ]);
+      setNewItem("");
+    }
+  };
+
+  const onClick = e => {
+    const input = inputEl.current;
+
+    if (input.value) {
+      setItems([
+        ...items,
+        {
+          text: input.value
+        }
+      ]);
+      setNewItem("");
+    }
   };
 
   return (
@@ -62,8 +90,15 @@ const Card = ({ data: { title, content, dinos } }) => {
       <header>{title}</header>
       <article dangerouslySetInnerHTML={{ __html: content }} />
       <div>
-        <input id="itemForm" type="text" />
-        <button onClick={onAddDianosaur}>Add Dinosaur</button>
+        <input
+          id="itemForm"
+          type="text"
+          ref={inputEl}
+          value={newItem}
+          onKeyDown={onEnter}
+          onChange={onChange}
+        />
+        <button onClick={onClick}>Add Dinosaur</button>
       </div>
       <ul>
         {items.map(({ text, weight }, index) => (
