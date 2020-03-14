@@ -1,4 +1,5 @@
 const { render } = ReactDOM;
+const { useState } = React;
 
 const data = {
   title: "Dinosaurs",
@@ -20,8 +21,41 @@ const data = {
   ]
 };
 
+const capitalize = function(value) {
+  if (!value) return "";
+  value = value.toString();
+  return value.charAt(0).toUpperCase() + value.slice(1);
+};
+
+const compose = (...fns) => arg =>
+  fns.reduce((composed, f) => f(composed), arg);
+
+const undercase = function(value) {
+  if (!value) return "";
+  value = value.toString();
+  return value.toLowerCase();
+};
+
+const url = function(value) {
+  if (!value) return "";
+  value = value.toString();
+  return "https://en.wikipedia.org/wiki/" + value;
+};
+
+const undercaseUrl = compose(undercase, url);
+
 const Card = ({ data: { title, content, dinos } }) => {
-  const onAddDianosaur = () => {};
+  const [items, setItems] = useState(dinos);
+
+  const onAddDianosaur = e => {
+    e.preventDefault();
+    setItems([
+      ...items,
+      {
+        text: e.target.value
+      }
+    ]);
+  };
 
   return (
     <div id="card">
@@ -31,7 +65,18 @@ const Card = ({ data: { title, content, dinos } }) => {
         <input id="itemForm" type="text" />
         <button onClick={onAddDianosaur}>Add Dinosaur</button>
       </div>
-      <ul></ul>
+      <ul>
+        {items.map(({ text, weight }, index) => (
+          <li key={index}>
+            <h4>{capitalize(text)}</h4>
+            <span>
+              The {undercase(text)} weighs {weight}.
+            </span>
+            <br />
+            <a href="#">{undercaseUrl(text)}</a>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
